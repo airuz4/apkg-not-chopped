@@ -33,9 +33,9 @@
   <!-- Navigation Header -->
   <header class="bg-white/80 dark:bg-slate-800/80 backdrop-blur border-b border-slate-200 dark:border-slate-700 px-4 py-3 flex items-center justify-between sticky top-0 z-20">
     <div class="flex items-center gap-2">
-      <div class="p-1.5 bg-brand-500 text-white rounded-lg shadow-sm">
+      <button id="openDeckDrawerBtn" class="p-1.5 bg-brand-500 text-white rounded-lg shadow-sm hover:bg-brand-600 transition" title="Open Decks Manager">
         <i data-lucide="layers" class="w-5 h-5"></i>
-      </div>
+      </button>
       <h1 class="font-bold text-lg tracking-tight bg-gradient-to-r from-slate-900 to-slate-700 dark:from-white dark:to-slate-300 bg-clip-text text-transparent">APKG Web Reader</h1>
     </div>
     
@@ -44,7 +44,7 @@
         <i data-lucide="moon" id="themeIcon" class="w-5 h-5"></i>
       </button>
 
-      <!-- iOS Native Input Button -->
+      <!-- Import Deck Input Button -->
       <div class="relative overflow-hidden inline-flex items-center gap-1.5 bg-brand-600 hover:bg-brand-700 text-white font-medium text-xs sm:text-sm px-3.5 py-2 rounded-xl shadow-sm transition active:scale-95">
         <i data-lucide="upload" class="w-4 h-4"></i>
         <span>Import Deck</span>
@@ -61,9 +61,9 @@
       <div class="w-20 h-20 bg-brand-50 dark:bg-slate-800 text-brand-500 rounded-3xl flex items-center justify-center mb-6 shadow-sm border border-slate-200 dark:border-slate-700">
         <i data-lucide="file-up" class="w-10 h-10"></i>
       </div>
-      <h2 class="text-2xl font-bold mb-2">No Deck Loaded</h2>
+      <h2 class="text-2xl font-bold mb-2">No Active Deck Selected</h2>
       <p class="text-slate-500 dark:text-slate-400 text-sm max-w-sm mb-6">
-        Select an <code class="text-xs bg-slate-200 dark:bg-slate-800 px-1.5 py-0.5 rounded font-mono">.apkg</code> file to import your flashcard deck.
+        Import an <code class="text-xs bg-slate-200 dark:bg-slate-800 px-1.5 py-0.5 rounded font-mono">.apkg</code> file or choose from your saved decks list.
       </p>
 
       <div class="relative overflow-hidden inline-flex items-center gap-2 bg-brand-600 hover:bg-brand-700 text-white font-semibold text-sm px-6 py-3 rounded-2xl shadow-md hover:shadow-lg transition active:scale-95">
@@ -82,7 +82,8 @@
     <!-- Flashcard Study View -->
     <div id="studyView" class="hidden flex-1 flex flex-col justify-between gap-4">
       <div class="flex items-center justify-between text-xs font-semibold text-slate-400 dark:text-slate-500 px-1">
-        <span id="cardProgress">Card 1 of 100</span>
+        <span id="activeDeckTitle" class="font-bold text-slate-700 dark:text-slate-300 truncate max-w-[150px]">Deck</span>
+        <span id="cardProgress">Remaining: 0 cards</span>
         <button id="shuffleBtn" class="flex items-center gap-1 hover:text-brand-500 transition">
           <i data-lucide="shuffle" class="w-3.5 h-3.5"></i> Shuffle
         </button>
@@ -162,6 +163,25 @@
     </div>
 
   </main>
+
+  <!-- Side Drawer for Multiple Decks -->
+  <div id="drawerOverlay" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-30 opacity-0 pointer-events-none transition-opacity duration-300"></div>
+  <aside id="deckDrawer" class="fixed top-0 left-0 bottom-0 w-80 max-w-[80vw] bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 z-40 transform -translate-x-full transition-transform duration-300 flex flex-col">
+    <div class="p-4 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <i data-lucide="library" class="w-5 h-5 text-brand-500"></i>
+        <h2 class="font-bold text-base">Session Decks</h2>
+      </div>
+      <button id="closeDeckDrawerBtn" class="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 hover:text-slate-600">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+    </div>
+
+    <!-- Deck List Container -->
+    <div id="deckList" class="flex-1 overflow-y-auto p-3 space-y-2">
+      <!-- Injected dynamically -->
+    </div>
+  </aside>
 
   <!-- Main Application Logic Script -->
   <script src="app.js"></script>

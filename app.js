@@ -1,5 +1,8 @@
 // Application State
 let SQL = null;
+let sessionDecks = []; // Array of saved deck objects: { id, name, cards, mediaFiles }
+let activeDeckId = null;
+
 let originalDeck = [];
 let queue = [];
 let totalCardsCount = 0;
@@ -27,6 +30,7 @@ const cardInner = document.getElementById('cardInner');
 const cardFront = document.getElementById('cardFront');
 const cardBack = document.getElementById('cardBack');
 const cardProgress = document.getElementById('cardProgress');
+const activeDeckTitle = document.getElementById('activeDeckTitle');
 const badgeRight = document.getElementById('badgeRight');
 const badgeLeft = document.getElementById('badgeLeft');
 
@@ -36,6 +40,13 @@ const restartBtn = document.getElementById('restartBtn');
 const shuffleBtn = document.getElementById('shuffleBtn');
 const themeToggle = document.getElementById('themeToggle');
 const themeIcon = document.getElementById('themeIcon');
+
+// Drawer Elements
+const openDeckDrawerBtn = document.getElementById('openDeckDrawerBtn');
+const closeDeckDrawerBtn = document.getElementById('closeDeckDrawerBtn');
+const deckDrawer = document.getElementById('deckDrawer');
+const drawerOverlay = document.getElementById('drawerOverlay');
+const deckList = document.getElementById('deckList');
 
 // Initialize Icons
 lucide.createIcons();
@@ -47,6 +58,22 @@ themeToggle.addEventListener('click', () => {
   themeIcon.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
   lucide.createIcons();
 });
+
+// Drawer Controls
+openDeckDrawerBtn.addEventListener('click', toggleDrawer);
+closeDeckDrawerBtn.addEventListener('click', toggleDrawer);
+drawerOverlay.addEventListener('click', toggleDrawer);
+
+function toggleDrawer() {
+  const isOpen = !deckDrawer.classList.contains('-translate-x-full');
+  if (isOpen) {
+    deckDrawer.classList.add('-translate-x-full');
+    drawerOverlay.classList.add('opacity-0', 'pointer-events-none');
+  } else {
+    deckDrawer.classList.remove('-translate-x-full');
+    drawerOverlay.classList.remove('opacity-0', 'pointer-events-none');
+  }
+}
 
 // Lazy SQL.js Engine Loader
 async function getSQLEngine() {
@@ -88,7 +115,7 @@ async function handleFileUpload(file) {
   try {
     const zip = await JSZip.loadAsync(file);
     
-    mediaFiles = {};
+    const localMediaFiles = {};
     const mediaFileEntry = zip.file(/media$/i)[0];
     if (mediaFileEntry) {
       const mediaMapText = await mediaFileEntry.async('text');
@@ -98,7 +125,7 @@ async function handleFileUpload(file) {
           const fileData = zip.file(key);
           if (fileData) {
             const blob = await fileData.async('blob');
-            mediaFiles[filename] = URL.createObjectURL(blob);
+            localMediaFiles[filename] = URL.createObjectURL(blob);
           }
         }
       } catch (err) {
@@ -133,7 +160,7 @@ async function handleFileUpload(file) {
     const sqlEngine = await getSQLEngine();
     const db = new sqlEngine.Database(dbBuffer);
     
-    originalDeck = [];
+    const parsedCards = [];
     const res = db.exec("SELECT flds FROM notes");
     if (res.length > 0 && res[0].values) {
       res[0].values.forEach(row => {
@@ -142,30 +169,117 @@ async function handleFileUpload(file) {
         const backRaw = fields.length > 1 ? fields.slice(1).join('<br>') : fields[0];
 
         if (!frontRaw.includes("Please update to the latest Anki version")) {
-          originalDeck.push({
-            front: processCardText(frontRaw),
-            back: processCardText(backRaw),
+          parsedCards.push({
+            front: processCardText(frontRaw, localMediaFiles),
+            back: processCardText(backRaw, localMediaFiles),
             hasBeenReviewed: false
           });
         }
       });
     }
 
-    if (originalDeck.length === 0) {
+    if (parsedCards.length === 0) {
       throw new Error('No valid flashcards found inside this deck.');
     }
 
-    initDeckSession();
-    showView('study');
+    // Save imported deck into session array
+    const deckName = file.name.replace(/\.apkg$/i, '');
+    const newDeck = {
+      id: Date.now().toString(),
+      name: deckName,
+      cards: parsedCards,
+      mediaFiles: localMediaFiles
+    };
+
+    sessionDecks.push(newDeck);
+    renderDeckDrawer();
+    selectDeck(newDeck.id);
 
   } catch (err) {
     alert(`Error loading deck: ${err.message}`);
-    showView('welcome');
+    if (sessionDecks.length === 0) showView('welcome');
+    else showView('study');
   }
 }
 
 fileInputHeader.addEventListener('change', (e) => handleFileUpload(e.target.files[0]));
 fileInputCenter.addEventListener('change', (e) => handleFileUpload(e.target.files[0]));
+
+// Render Decks in Drawer
+function renderDeckDrawer() {
+  deckList.innerHTML = '';
+  if (sessionDecks.length === 0) {
+    deckList.innerHTML = '<p class="text-xs text-slate-400 p-2 text-center">No decks loaded yet.</p>';
+    return;
+  }
+
+  sessionDecks.forEach(deck => {
+    const isActive = deck.id === activeDeckId;
+    const item = document.createElement('div');
+    item.className = `p-3 rounded-xl border transition cursor-pointer flex items-center justify-between ${
+      isActive 
+        ? 'bg-brand-50 dark:bg-brand-950/40 border-brand-300 dark:border-brand-800 text-brand-600 dark:text-brand-400 font-semibold'
+        : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50'
+    }`;
+    
+    item.innerHTML = `
+      <div class="truncate mr-2 flex-1">
+        <p class="text-sm truncate">${deck.name}</p>
+        <p class="text-xs text-slate-400 font-normal">${deck.cards.length} cards</p>
+      </div>
+      <button class="delete-deck-btn text-slate-400 hover:text-rose-500 p-1" data-id="${deck.id}">
+        <i data-lucide="trash-2" class="w-4 h-4"></i>
+      </button>
+    `;
+
+    item.addEventListener('click', (e) => {
+      if (!e.target.closest('.delete-deck-btn')) {
+        selectDeck(deck.id);
+        toggleDrawer();
+      }
+    });
+
+    deckList.appendChild(item);
+  });
+
+  // Attach delete buttons listeners
+  document.querySelectorAll('.delete-deck-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const id = btn.getAttribute('data-id');
+      deleteDeck(id);
+    });
+  });
+
+  lucide.createIcons();
+}
+
+function selectDeck(id) {
+  const deck = sessionDecks.find(d => d.id === id);
+  if (!deck) return;
+
+  activeDeckId = id;
+  originalDeck = deck.cards;
+  mediaFiles = deck.mediaFiles;
+  activeDeckTitle.innerText = deck.name;
+
+  renderDeckDrawer();
+  initDeckSession();
+  showView('study');
+}
+
+function deleteDeck(id) {
+  sessionDecks = sessionDecks.filter(d => d.id !== id);
+  if (activeDeckId === id) {
+    if (sessionDecks.length > 0) {
+      selectDeck(sessionDecks[0].id);
+    } else {
+      activeDeckId = null;
+      showView('welcome');
+    }
+  }
+  renderDeckDrawer();
+}
 
 function initDeckSession() {
   queue = originalDeck.map(c => ({ ...c }));
@@ -175,7 +289,7 @@ function initDeckSession() {
   showCurrentCard();
 }
 
-function processCardText(rawHtml) {
+function processCardText(rawHtml, mediaMap) {
   if (!rawHtml) return '';
   let processed = rawHtml.replace(/\{\{c\d+::(.*?)(?:::.*?)?\}\}/g, '<span class="cloze">[$1]</span>');
 
@@ -185,8 +299,8 @@ function processCardText(rawHtml) {
 
   imgs.forEach(img => {
     const src = img.getAttribute('src');
-    if (src && mediaFiles[src]) {
-      img.setAttribute('src', mediaFiles[src]);
+    if (src && mediaMap && mediaMap[src]) {
+      img.setAttribute('src', mediaMap[src]);
     }
   });
 
@@ -283,7 +397,7 @@ function onTouchEnd() {
   currentY = 0;
 }
 
-// Touch and Click Event Listeners
+// Event Listeners
 cardInner.addEventListener('touchstart', onTouchStart, { passive: true });
 cardInner.addEventListener('touchmove', onTouchMove, { passive: true });
 cardInner.addEventListener('touchend', onTouchEnd);
