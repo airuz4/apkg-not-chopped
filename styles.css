@@ -1,0 +1,62 @@
+.perspective-1000 {
+  perspective: 1000px;
+}
+
+.transform-style-3d {
+  transform-style: preserve-3d;
+}
+
+.backface-hidden {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.rotate-y-180 {
+  transform: rotateY(180deg);
+}
+
+/* Anki HTML Elements Support */
+.anki-content img {
+  max-width: 100%;
+  height: auto;
+  margin: 0.5rem auto;
+  display: block;
+  border-radius: 0.375rem;
+}
+
+.anki-content ul {
+  list-style-type: disc;
+  padding-left: 1.25rem;
+}
+
+.anki-content ol {
+  list-style-type: decimal;
+  padding-left: 1.25rem;
+}
+
+.anki-content code {
+  background-color: rgba(0, 0, 0, 0.05);
+  padding: 0.1rem 0.3rem;
+  border-radius: 0.25rem;
+  font-size: 0.9em;
+}
+
+.dark .anki-content code {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Cloze Deletion Highlighting */
+.cloze {
+  font-weight: 600;
+  color: #0284c7;
+  padding: 0 0.15rem;
+}
+
+.dark .cloze {
+  color: #38bdf8;
+}
+
+/* Card Swipe Transitions */
+.card-swipe-transition {
+  transition: transform 0.25s ease-out, opacity 0.25s ease-out;
+}

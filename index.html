@@ -20,45 +20,23 @@
     }
   </script>
 
-  <!-- Lucide Icons -->
+  <!-- External Libraries -->
   <script src="https://unpkg.com/lucide@latest"></script>
-
-  <!-- JSZip -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-
-  <!-- sql.js (WebAssembly SQLite) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/sql-wasm.js"></script>
 
-  <style>
-    .perspective-1000 { perspective: 1000px; }
-    .transform-style-3d { transform-style: preserve-3d; }
-    .backface-hidden { backface-visibility: hidden; -webkit-backface-visibility: hidden; }
-    .rotate-y-180 { transform: rotateY(180deg); }
-    
-    /* APKG HTML styling support */
-    .APKG-content img { max-width: 100%; height: auto; margin: 0.5rem auto; display: block; border-radius: 0.375rem; }
-    .APKG-content ul { list-style-type: disc; padding-left: 1.25rem; }
-    .APKG-content ol { list-style-type: decimal; padding-left: 1.25rem; }
-    .APKG-content code { background-color: rgba(0,0,0,0.05); padding: 0.1rem 0.3rem; border-radius: 0.25rem; font-size: 0.9em; }
-    .dark .APKG-content code { background-color: rgba(255,255,255,0.1); }
-    
-    /* Cloze Deletion Styling */
-    .cloze { font-weight: 600; color: #0284c7; padding: 0 0.15rem; }
-    .dark .cloze { color: #38bdf8; }
-
-    /* Touch & Drag Smoothness */
-    .card-swipe-transition { transition: transform 0.25s ease-out, opacity 0.25s ease-out; }
-  </style>
+  <!-- Custom Styles -->
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body class="h-full bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 transition-colors duration-200 flex flex-col font-sans select-none antialiased overflow-hidden">
 
-  <!-- Top Navigation Header -->
+  <!-- Navigation Header -->
   <header class="bg-white/80 dark:bg-slate-800/80 backdrop-blur border-b border-slate-200 dark:border-slate-700 px-4 py-3 flex items-center justify-between sticky top-0 z-20">
     <div class="flex items-center gap-2">
       <div class="p-1.5 bg-brand-500 text-white rounded-lg shadow-sm">
         <i data-lucide="layers" class="w-5 h-5"></i>
       </div>
-      <h1 class="font-bold text-lg tracking-tight bg-gradient-to-r from-slate-900 to-slate-700 dark:from-white dark:to-slate-300 bg-clip-text text-transparent">APKG Reader</h1>
+      <h1 class="font-bold text-lg tracking-tight bg-gradient-to-r from-slate-900 to-slate-700 dark:from-white dark:to-slate-300 bg-clip-text text-transparent">APKG Web Reader</h1>
     </div>
     
     <div class="flex items-center gap-2">
@@ -66,7 +44,7 @@
         <i data-lucide="moon" id="themeIcon" class="w-5 h-5"></i>
       </button>
 
-      <!-- iOS WebKit Native Input Button -->
+      <!-- iOS Native Input Button -->
       <div class="relative overflow-hidden inline-flex items-center gap-1.5 bg-brand-600 hover:bg-brand-700 text-white font-medium text-xs sm:text-sm px-3.5 py-2 rounded-xl shadow-sm transition active:scale-95">
         <i data-lucide="upload" class="w-4 h-4"></i>
         <span>Import Deck</span>
@@ -75,10 +53,10 @@
     </div>
   </header>
 
-  <!-- Main App View Container -->
+  <!-- Main View Container -->
   <main class="flex-1 flex flex-col p-4 max-w-xl w-full mx-auto justify-between overflow-hidden relative">
 
-    <!-- Empty / Welcome State -->
+    <!-- Welcome View -->
     <div id="welcomeView" class="flex-1 flex flex-col items-center justify-center text-center px-4">
       <div class="w-20 h-20 bg-brand-50 dark:bg-slate-800 text-brand-500 rounded-3xl flex items-center justify-center mb-6 shadow-sm border border-slate-200 dark:border-slate-700">
         <i data-lucide="file-up" class="w-10 h-10"></i>
@@ -95,16 +73,14 @@
       </div>
     </div>
 
-    <!-- Processing & Loading Overlay -->
+    <!-- Loading Overlay View -->
     <div id="loadingView" class="hidden flex-1 flex flex-col items-center justify-center text-center px-4">
       <div class="w-12 h-12 border-4 border-brand-500 border-t-transparent rounded-full animate-spin mb-4"></div>
       <p id="loadingStatus" class="text-sm font-medium text-slate-600 dark:text-slate-300">Reading .apkg package...</p>
     </div>
 
-    <!-- Active Flashcard Study View -->
+    <!-- Flashcard Study View -->
     <div id="studyView" class="hidden flex-1 flex flex-col justify-between gap-4">
-      
-      <!-- Top Meta Stats bar -->
       <div class="flex items-center justify-between text-xs font-semibold text-slate-400 dark:text-slate-500 px-1">
         <span id="cardProgress">Card 1 of 100</span>
         <button id="shuffleBtn" class="flex items-center gap-1 hover:text-brand-500 transition">
@@ -112,12 +88,10 @@
         </button>
       </div>
 
-      <!-- Card Container with Swipe & 3D Flip Effect -->
+      <!-- Flashcard with 3D Flip & Touch Drag -->
       <div class="flex-1 perspective-1000 my-auto min-h-[340px] max-h-[500px] relative touch-none">
-        
         <div id="cardInner" class="w-full h-full relative transform-style-3d cursor-pointer rounded-3xl shadow-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800">
           
-          <!-- Swipe Overlay Feedback Badges -->
           <div id="badgeRight" class="absolute top-6 left-6 z-30 opacity-0 pointer-events-none transition-opacity border-4 border-emerald-500 text-emerald-500 font-extrabold text-xl px-3 py-1 rounded-xl rotate-[-12deg] tracking-wider uppercase">
             Learned
           </div>
@@ -128,7 +102,7 @@
           <!-- Front Face -->
           <div class="absolute inset-0 w-full h-full backface-hidden p-6 sm:p-8 flex flex-col justify-between overflow-y-auto">
             <div class="text-xs uppercase tracking-wider text-slate-400 font-bold mb-2">Question</div>
-            <div id="cardFront" class="APKG-content flex-1 flex flex-col justify-center text-center text-lg sm:text-xl leading-relaxed text-slate-800 dark:text-slate-100"></div>
+            <div id="cardFront" class="anki-content flex-1 flex flex-col justify-center text-center text-lg sm:text-xl leading-relaxed text-slate-800 dark:text-slate-100"></div>
             <div class="text-center text-xs text-slate-400 font-medium pt-4 flex items-center justify-center gap-1">
               <i data-lucide="rotate-cw" class="w-3.5 h-3.5"></i> Tap to flip • Swipe left/right
             </div>
@@ -137,7 +111,7 @@
           <!-- Back Face -->
           <div class="absolute inset-0 w-full h-full backface-hidden rotate-y-180 p-6 sm:p-8 flex flex-col justify-between overflow-y-auto">
             <div class="text-xs uppercase tracking-wider font-bold text-brand-500 mb-2">Answer</div>
-            <div id="cardBack" class="APKG-content flex-1 flex flex-col justify-center text-center text-lg sm:text-xl leading-relaxed text-slate-800 dark:text-slate-100"></div>
+            <div id="cardBack" class="anki-content flex-1 flex flex-col justify-center text-center text-lg sm:text-xl leading-relaxed text-slate-800 dark:text-slate-100"></div>
             <div class="text-center text-xs text-slate-400 font-medium pt-4">
               Swipe right if known • Swipe left to repeat
             </div>
@@ -146,7 +120,7 @@
         </div>
       </div>
 
-      <!-- Action & Swipe Buttons -->
+      <!-- Action Buttons -->
       <div class="flex items-center justify-between gap-3 pt-2">
         <button id="btnAgain" class="flex-1 py-3 px-4 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/50 text-rose-600 dark:text-rose-400 font-semibold text-sm shadow-sm hover:bg-rose-100 dark:hover:bg-rose-900/60 active:scale-95 transition flex items-center justify-center gap-1.5">
           <i data-lucide="x" class="w-4 h-4"></i> Again (Left)
@@ -155,7 +129,6 @@
           Learned (Right) <i data-lucide="check" class="w-4 h-4"></i>
         </button>
       </div>
-
     </div>
 
     <!-- Learning Complete View -->
@@ -168,7 +141,6 @@
         You've reviewed all cards in this deck.
       </p>
 
-      <!-- Results Breakdown Box -->
       <div class="w-full max-w-xs bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-4 mb-6 shadow-sm">
         <div class="flex justify-between items-center py-2 border-b border-slate-100 dark:border-slate-700/50">
           <span class="text-xs font-semibold text-slate-500">Total Cards</span>
@@ -191,352 +163,7 @@
 
   </main>
 
-  <script>
-    let SQL = null;
-    let originalDeck = [];
-    let queue = [];
-    let totalCardsCount = 0;
-    let learnedFirstTryCount = 0;
-    let repeatedCount = 0;
-
-    let isFlipped = false;
-    let mediaFiles = {};
-
-    // Touch & Swipe State Variables
-    let startX = 0, startY = 0, currentX = 0, currentY = 0;
-    let isDragging = false;
-    let isClickPrevented = false;
-
-    const fileInputHeader = document.getElementById('fileInputHeader');
-    const fileInputCenter = document.getElementById('fileInputCenter');
-    const welcomeView = document.getElementById('welcomeView');
-    const loadingView = document.getElementById('loadingView');
-    const studyView = document.getElementById('studyView');
-    const completeView = document.getElementById('completeView');
-    const loadingStatus = document.getElementById('loadingStatus');
-
-    const cardInner = document.getElementById('cardInner');
-    const cardFront = document.getElementById('cardFront');
-    const cardBack = document.getElementById('cardBack');
-    const cardProgress = document.getElementById('cardProgress');
-    const badgeRight = document.getElementById('badgeRight');
-    const badgeLeft = document.getElementById('badgeLeft');
-
-    const btnAgain = document.getElementById('btnAgain');
-    const btnGood = document.getElementById('btnGood');
-    const restartBtn = document.getElementById('restartBtn');
-    const shuffleBtn = document.getElementById('shuffleBtn');
-    const themeToggle = document.getElementById('themeToggle');
-    const themeIcon = document.getElementById('themeIcon');
-
-    lucide.createIcons();
-
-    themeToggle.addEventListener('click', () => {
-      document.documentElement.classList.toggle('dark');
-      const isDark = document.documentElement.classList.contains('dark');
-      themeIcon.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
-      lucide.createIcons();
-    });
-
-    async function getSQLEngine() {
-      if (!SQL) {
-        SQL = await initSqlJs({
-          locateFile: file => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/${file}`
-        });
-      }
-      return SQL;
-    }
-
-    async function decompressZstd(uint8Array) {
-      if (!window.ZstdCodec) {
-        await new Promise((resolve, reject) => {
-          const script = document.createElement('script');
-          script.src = 'https://cdn.jsdelivr.net/npm/zstd-codec@0.1.2/bundle/zstd-codec.min.js';
-          script.onload = resolve;
-          script.onerror = reject;
-          document.head.appendChild(script);
-        });
-      }
-      return new Promise((resolve) => {
-        window.ZstdCodec.run(zstd => {
-          const simple = new zstd.Simple();
-          const decompressed = simple.decompress(uint8Array);
-          resolve(decompressed);
-        });
-      });
-    }
-
-    async function handleFileUpload(file) {
-      if (!file) return;
-
-      showView('loading');
-      updateStatus('Unpacking .apkg package...');
-
-      try {
-        const zip = await JSZip.loadAsync(file);
-        
-        mediaFiles = {};
-        const mediaFileEntry = zip.file(/media$/i)[0];
-        if (mediaFileEntry) {
-          const mediaMapText = await mediaFileEntry.async('text');
-          try {
-            const mediaMap = JSON.parse(mediaMapText);
-            for (const [key, filename] of Object.entries(mediaMap)) {
-              const fileData = zip.file(key);
-              if (fileData) {
-                const blob = await fileData.async('blob');
-                mediaFiles[filename] = URL.createObjectURL(blob);
-              }
-            }
-          } catch (err) {
-            console.warn('Failed to parse media mapping JSON:', err);
-          }
-        }
-
-        updateStatus('Opening collection database...');
-        let dbBuffer = null;
-
-        const APKG21bEntry = zip.file(/collection\.APKG21b$/i)[0];
-        const APKG21Entry = zip.file(/collection\.APKG21$/i)[0];
-        const APKG2Entry = zip.file(/collection\.APKG2$/i)[0];
-
-        if (APKG21bEntry) {
-          updateStatus('Decompressing modern APKG v3 database...');
-          const compressedData = await APKG21bEntry.async('uint8array');
-          dbBuffer = await decompressZstd(compressedData);
-        } else if (APKG21Entry) {
-          dbBuffer = await APKG21Entry.async('uint8array');
-        } else if (APKG2Entry) {
-          dbBuffer = await APKG2Entry.async('uint8array');
-        } else {
-          const anyDb = zip.file(/.*\.(APKG2|APKG21|sqlite|db)$/i)[0];
-          if (anyDb) {
-            dbBuffer = await anyDb.async('uint8array');
-          } else {
-            throw new Error('Valid APKG collection database not found in file.');
-          }
-        }
-
-        const sqlEngine = await getSQLEngine();
-        const db = new sqlEngine.Database(dbBuffer);
-        
-        originalDeck = [];
-        const res = db.exec("SELECT flds FROM notes");
-        if (res.length > 0 && res[0].values) {
-          res[0].values.forEach(row => {
-            const fields = row[0].split('\x1f');
-            const frontRaw = fields[0] || '';
-            const backRaw = fields.length > 1 ? fields.slice(1).join('<br>') : fields[0];
-
-            if (!frontRaw.includes("Please update to the latest APKG version")) {
-              originalDeck.push({
-                front: processCardText(frontRaw),
-                back: processCardText(backRaw),
-                hasBeenReviewed: false
-              });
-            }
-          });
-        }
-
-        if (originalDeck.length === 0) {
-          throw new Error('No valid flashcards found inside this deck.');
-        }
-
-        initDeckSession();
-        showView('study');
-
-      } catch (err) {
-        alert(`Error loading deck: ${err.message}`);
-        showView('welcome');
-      }
-    }
-
-    fileInputHeader.addEventListener('change', (e) => handleFileUpload(e.target.files[0]));
-    fileInputCenter.addEventListener('change', (e) => handleFileUpload(e.target.files[0]));
-
-    function initDeckSession() {
-      queue = originalDeck.map(c => ({ ...c }));
-      totalCardsCount = queue.length;
-      learnedFirstTryCount = 0;
-      repeatedCount = 0;
-      showCurrentCard();
-    }
-
-    function processCardText(rawHtml) {
-      if (!rawHtml) return '';
-      let processed = rawHtml.replace(/\{\{c\d+::(.*?)(?:::.*?)?\}\}/g, '<span class="cloze">[$1]</span>');
-
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(processed, 'text/html');
-      const imgs = doc.querySelectorAll('img');
-
-      imgs.forEach(img => {
-        const src = img.getAttribute('src');
-        if (src && mediaFiles[src]) {
-          img.setAttribute('src', mediaFiles[src]);
-        }
-      });
-
-      return doc.body.innerHTML;
-    }
-
-    function showCurrentCard() {
-      if (queue.length === 0) {
-        showCompletionScreen();
-        return;
-      }
-
-      // Reset card flip and position
-      isFlipped = false;
-      cardInner.classList.remove('rotate-y-180', 'card-swipe-transition');
-      cardInner.style.transform = 'none';
-      badgeRight.style.opacity = 0;
-      badgeLeft.style.opacity = 0;
-
-      const currentCard = queue[0];
-      cardFront.innerHTML = currentCard.front;
-      cardBack.innerHTML = currentCard.back;
-
-      cardProgress.innerText = `Remaining: ${queue.length} cards`;
-    }
-
-    // Handle Swiping Logic
-    function handleAction(direction) {
-      if (queue.length === 0) return;
-      const card = queue.shift();
-
-      if (direction === 'right') {
-        if (!card.hasBeenReviewed) learnedFirstTryCount++;
-      } else {
-        card.hasBeenReviewed = true;
-        repeatedCount++;
-        queue.push(card); // Re-queue card to end of deck
-      }
-
-      showCurrentCard();
-    }
-
-    // Touch & Drag Gesture Listeners
-    function onTouchStart(e) {
-      if (queue.length === 0) return;
-      isDragging = true;
-      isClickPrevented = false;
-      const touch = e.touches ? e.touches[0] : e;
-      startX = touch.clientX;
-      startY = touch.clientY;
-      cardInner.classList.remove('card-swipe-transition');
-    }
-
-    function onTouchMove(e) {
-      if (!isDragging) return;
-      const touch = e.touches ? e.touches[0] : e;
-      currentX = touch.clientX - startX;
-      currentY = touch.clientY - startY;
-
-      if (Math.abs(currentX) > 10) isClickPrevented = true;
-
-      const rotateDeg = currentX * 0.08;
-      const flipRotation = isFlipped ? 'rotateY(180deg)' : '';
-      cardInner.style.transform = `translate3d(${currentX}px, ${currentY}px, 0) rotate(${rotateDeg}deg) ${flipRotation}`;
-
-      // Badge Opacity Control
-      const opacity = Math.min(Math.abs(currentX) / 100, 1);
-      if (currentX > 0) {
-        badgeRight.style.opacity = opacity;
-        badgeLeft.style.opacity = 0;
-      } else {
-        badgeLeft.style.opacity = opacity;
-        badgeRight.style.opacity = 0;
-      }
-    }
-
-    function onTouchEnd() {
-      if (!isDragging) return;
-      isDragging = false;
-      cardInner.classList.add('card-swipe-transition');
-
-      const threshold = 110;
-      if (currentX > threshold) {
-        // Swipe Right -> Learned
-        cardInner.style.transform = `translate3d(1000px, ${currentY}px, 0) rotate(45deg)`;
-        setTimeout(() => handleAction('right'), 200);
-      } else if (currentX < -threshold) {
-        // Swipe Left -> Repeat
-        cardInner.style.transform = `translate3d(-1000px, ${currentY}px, 0) rotate(-45deg)`;
-        setTimeout(() => handleAction('left'), 200);
-      } else {
-        // Snap back to center
-        const flipRotation = isFlipped ? 'rotateY(180deg)' : '';
-        cardInner.style.transform = flipRotation ? flipRotation : 'none';
-        badgeRight.style.opacity = 0;
-        badgeLeft.style.opacity = 0;
-      }
-
-      currentX = 0;
-      currentY = 0;
-    }
-
-    // Attach Swipe Events
-    cardInner.addEventListener('touchstart', onTouchStart, { passive: true });
-    cardInner.addEventListener('touchmove', onTouchMove, { passive: true });
-    cardInner.addEventListener('touchend', onTouchEnd);
-
-    cardInner.addEventListener('mousedown', onTouchStart);
-    window.addEventListener('mousemove', onTouchMove);
-    window.addEventListener('mouseup', onTouchEnd);
-
-    // Card Flip Click Event
-    cardInner.addEventListener('click', () => {
-      if (isClickPrevented) return;
-      isFlipped = !isFlipped;
-      cardInner.classList.toggle('rotate-y-180');
-    });
-
-    // Button Actions
-    btnAgain.addEventListener('click', () => {
-      cardInner.classList.add('card-swipe-transition');
-      cardInner.style.transform = 'translate3d(-1000px, 0, 0) rotate(-30deg)';
-      setTimeout(() => handleAction('left'), 200);
-    });
-
-    btnGood.addEventListener('click', () => {
-      cardInner.classList.add('card-swipe-transition');
-      cardInner.style.transform = 'translate3d(1000px, 0, 0) rotate(30deg)';
-      setTimeout(() => handleAction('right'), 200);
-    });
-
-    shuffleBtn.addEventListener('click', () => {
-      queue.sort(() => Math.random() - 0.5);
-      showCurrentCard();
-    });
-
-    restartBtn.addEventListener('click', () => {
-      initDeckSession();
-      showView('study');
-    });
-
-    function showCompletionScreen() {
-      document.getElementById('statTotal').innerText = totalCardsCount;
-      document.getElementById('statLearned').innerText = learnedFirstTryCount;
-      document.getElementById('statRepeated').innerText = repeatedCount;
-      showView('complete');
-    }
-
-    function showView(viewName) {
-      welcomeView.classList.add('hidden');
-      loadingView.classList.add('hidden');
-      studyView.classList.add('hidden');
-      completeView.classList.add('hidden');
-
-      if (viewName === 'welcome') welcomeView.classList.remove('hidden');
-      if (viewName === 'loading') loadingView.classList.remove('hidden');
-      if (viewName === 'study') studyView.classList.remove('hidden');
-      if (viewName === 'complete') completeView.classList.remove('hidden');
-    }
-
-    function updateStatus(text) {
-      loadingStatus.innerText = text;
-    }
-  </script>
+  <!-- Main Application Logic Script -->
+  <script src="app.js"></script>
 </body>
 </html>
