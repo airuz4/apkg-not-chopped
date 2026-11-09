@@ -30,28 +30,35 @@
 </head>
 <body class="h-full bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 transition-colors duration-200 flex flex-col font-sans select-none antialiased overflow-hidden">
 
-  <!-- Navigation Header -->
-  <header class="bg-white/80 dark:bg-slate-800/80 backdrop-blur border-b border-slate-200 dark:border-slate-700 px-4 py-3 flex items-center justify-between sticky top-0 z-20">
-    <div class="flex items-center gap-2">
-      <button id="openDeckDrawerBtn" class="p-1.5 bg-brand-500 text-white rounded-lg shadow-sm hover:bg-brand-600 transition" title="Open Decks Manager">
-        <i data-lucide="layers" class="w-5 h-5"></i>
-      </button>
-      <h1 class="font-bold text-lg tracking-tight bg-gradient-to-r from-slate-900 to-slate-700 dark:from-white dark:to-slate-300 bg-clip-text text-transparent">APKG Web Reader</h1>
-    </div>
+ <!-- Navigation Header -->
+<header class="bg-white/80 dark:bg-slate-800/80 backdrop-blur border-b border-slate-200 dark:border-slate-700 px-4 py-3 flex items-center justify-between sticky top-0 z-20">
+  <div class="flex items-center gap-3">
+    <!-- Visible Drawer Button -->
+    <button id="openDeckDrawerBtn" class="flex items-center justify-center p-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-xl transition active:scale-95" title="Open Decks Manager">
+      <i data-lucide="menu" class="w-5 h-5"></i>
+    </button>
     
     <div class="flex items-center gap-2">
-      <button id="themeToggle" class="p-2 rounded-xl text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition">
-        <i data-lucide="moon" id="themeIcon" class="w-5 h-5"></i>
-      </button>
-
-      <!-- Import Deck Input Button -->
-      <div class="relative overflow-hidden inline-flex items-center gap-1.5 bg-brand-600 hover:bg-brand-700 text-white font-medium text-xs sm:text-sm px-3.5 py-2 rounded-xl shadow-sm transition active:scale-95">
-        <i data-lucide="upload" class="w-4 h-4"></i>
-        <span>Import Deck</span>
-        <input type="file" id="fileInputHeader" accept="*/*" class="absolute inset-0 opacity-0 w-full h-full cursor-pointer z-10" />
+      <div class="p-1.5 bg-brand-500 text-white rounded-lg shadow-sm">
+        <i data-lucide="layers" class="w-4 h-4"></i>
       </div>
+      <h1 class="font-bold text-base sm:text-lg tracking-tight bg-gradient-to-r from-slate-900 to-slate-700 dark:from-white dark:to-slate-300 bg-clip-text text-transparent">APKG Web Reader</h1>
     </div>
-  </header>
+  </div>
+  
+  <div class="flex items-center gap-2">
+    <button id="themeToggle" class="p-2 rounded-xl text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition">
+      <i data-lucide="moon" id="themeIcon" class="w-5 h-5"></i>
+    </button>
+
+    <!-- Import Deck Button -->
+    <div class="relative overflow-hidden inline-flex items-center gap-1.5 bg-brand-600 hover:bg-brand-700 text-white font-medium text-xs sm:text-sm px-3.5 py-2 rounded-xl shadow-sm transition active:scale-95">
+      <i data-lucide="upload" class="w-4 h-4"></i>
+      <span>Import</span>
+      <input type="file" id="fileInputHeader" accept="*/*" class="absolute inset-0 opacity-0 w-full h-full cursor-pointer z-10" />
+    </div>
+  </div>
+</header>
 
   <!-- Main View Container -->
   <main class="flex-1 flex flex-col p-4 max-w-xl w-full mx-auto justify-between overflow-hidden relative">
