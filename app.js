@@ -1,4 +1,4 @@
-// Application State & Storage Keys
+// Application State
 let SQL = null;
 let sessionDecks = []; 
 let activeDeckId = null;
@@ -65,13 +65,14 @@ closeDeckDrawerBtn.addEventListener('click', toggleDrawer);
 drawerOverlay.addEventListener('click', toggleDrawer);
 
 function toggleDrawer() {
-  const isOpen = !deckDrawer.classList.contains('-translate-x-full');
-  if (isOpen) {
-    deckDrawer.classList.add('-translate-x-full');
-    drawerOverlay.classList.add('opacity-0', 'pointer-events-none');
-  } else {
+  const isClosed = deckDrawer.classList.contains('-translate-x-full');
+  if (isClosed) {
+    renderDeckDrawer();
     deckDrawer.classList.remove('-translate-x-full');
     drawerOverlay.classList.remove('opacity-0', 'pointer-events-none');
+  } else {
+    deckDrawer.classList.add('-translate-x-full');
+    drawerOverlay.classList.add('opacity-0', 'pointer-events-none');
   }
 }
 
@@ -134,7 +135,7 @@ async function handleFileUpload(file) {
       }
     }
 
-    // Dynamic Database Finder across all zip entry keys
+    // Dynamic Database Finder
     updateStatus('Opening collection database...');
     let dbBuffer = null;
 
@@ -185,16 +186,16 @@ async function handleFileUpload(file) {
 
     const deckName = file.name.replace(/\.apkg$/i, '');
     const newDeck = {
-      id: Date.now().toString() + '_' + Math.random().toString(36).substr(2, 4),
+      id: Date.now().toString() + '_' + Math.random().toString(36).substring(2, 6),
       name: deckName,
       cards: parsedCards,
       mediaFiles: localMediaFiles
     };
 
-    // Push new deck without erasing previous ones
+    // Push new deck to deck list
     sessionDecks.push(newDeck);
     
-    // Reset file input targets so uploading the same file triggers change listener
+    // Clear inputs so upload event triggers on same file select
     fileInputHeader.value = '';
     fileInputCenter.value = '';
 
@@ -217,7 +218,7 @@ fileInputCenter.addEventListener('change', (e) => handleFileUpload(e.target.file
 function renderDeckDrawer() {
   deckList.innerHTML = '';
   if (sessionDecks.length === 0) {
-    deckList.innerHTML = '<p class="text-xs text-slate-400 p-2 text-center">No decks loaded yet.</p>';
+    deckList.innerHTML = '<p class="text-xs text-slate-400 p-4 text-center">No decks loaded yet.</p>';
     return;
   }
 
@@ -235,7 +236,7 @@ function renderDeckDrawer() {
         <p class="text-sm truncate">${deck.name}</p>
         <p class="text-xs text-slate-400 font-normal">${deck.cards.length} cards</p>
       </div>
-      <button class="delete-deck-btn text-slate-400 hover:text-rose-500 p-1" data-id="${deck.id}">
+      <button class="delete-deck-btn text-slate-400 hover:text-rose-500 p-1 rounded-lg" data-id="${deck.id}">
         <i data-lucide="trash-2" class="w-4 h-4"></i>
       </button>
     `;
