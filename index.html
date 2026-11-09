@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>APKG Web Reader</title>
+  <title>Anki Web Reader</title>
   
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -35,12 +35,12 @@
     .backface-hidden { backface-visibility: hidden; -webkit-backface-visibility: hidden; }
     .rotate-y-180 { transform: rotateY(180deg); }
     
-    /* APKG HTML styling support */
-    .APKG-content img { max-width: 100%; height: auto; margin: 0.5rem auto; display: block; border-radius: 0.375rem; }
-    .APKG-content ul { list-style-type: disc; padding-left: 1.25rem; }
-    .APKG-content ol { list-style-type: decimal; padding-left: 1.25rem; }
-    .APKG-content code { background-color: rgba(0,0,0,0.05); padding: 0.1rem 0.3rem; border-radius: 0.25rem; font-size: 0.9em; }
-    .dark .APKG-content code { background-color: rgba(255,255,255,0.1); }
+    /* Anki HTML styling support */
+    .anki-content img { max-width: 100%; height: auto; margin: 0.5rem auto; display: block; border-radius: 0.375rem; }
+    .anki-content ul { list-style-type: disc; padding-left: 1.25rem; }
+    .anki-content ol { list-style-type: decimal; padding-left: 1.25rem; }
+    .anki-content code { background-color: rgba(0,0,0,0.05); padding: 0.1rem 0.3rem; border-radius: 0.25rem; font-size: 0.9em; }
+    .dark .anki-content code { background-color: rgba(255,255,255,0.1); }
     
     /* Cloze Deletion Styling */
     .cloze { font-weight: 600; color: #0284c7; padding: 0 0.15rem; }
@@ -55,7 +55,7 @@
       <div class="p-1.5 bg-brand-500 text-white rounded-lg shadow-sm">
         <i data-lucide="layers" class="w-5 h-5"></i>
       </div>
-      <h1 class="font-bold text-lg tracking-tight bg-gradient-to-r from-slate-900 to-slate-700 dark:from-white dark:to-slate-300 bg-clip-text text-transparent">APKG Reader</h1>
+      <h1 class="font-bold text-lg tracking-tight bg-gradient-to-r from-slate-900 to-slate-700 dark:from-white dark:to-slate-300 bg-clip-text text-transparent">Anki Reader</h1>
     </div>
     
     <div class="flex items-center gap-2">
@@ -113,7 +113,7 @@
           <!-- Front Face -->
           <div class="absolute inset-0 w-full h-full backface-hidden p-6 sm:p-8 flex flex-col justify-between overflow-y-auto">
             <div class="text-xs uppercase tracking-wider text-slate-400 font-bold mb-2">Question</div>
-            <div id="cardFront" class="APKG-content flex-1 flex flex-col justify-center text-center text-lg sm:text-xl leading-relaxed text-slate-800 dark:text-slate-100">
+            <div id="cardFront" class="anki-content flex-1 flex flex-col justify-center text-center text-lg sm:text-xl leading-relaxed text-slate-800 dark:text-slate-100">
               <!-- Content injected dynamically -->
             </div>
             <div class="text-center text-xs text-slate-400 font-medium pt-4 flex items-center justify-center gap-1">
@@ -124,7 +124,7 @@
           <!-- Back Face -->
           <div class="absolute inset-0 w-full h-full backface-hidden rotate-y-180 p-6 sm:p-8 flex flex-col justify-between overflow-y-auto">
             <div class="text-xs uppercase tracking-wider font-bold text-brand-500 mb-2">Answer</div>
-            <div id="cardBack" class="APKG-content flex-1 flex flex-col justify-center text-center text-lg sm:text-xl leading-relaxed text-slate-800 dark:text-slate-100">
+            <div id="cardBack" class="anki-content flex-1 flex flex-col justify-center text-center text-lg sm:text-xl leading-relaxed text-slate-800 dark:text-slate-100">
               <!-- Content injected dynamically -->
             </div>
             <div class="text-center text-xs text-slate-400 font-medium pt-4">
@@ -150,14 +150,12 @@
   </main>
 
   <script>
-    // System State Variables
     let SQL = null;
     let cards = [];
     let currentIndex = 0;
     let isFlipped = false;
     let mediaFiles = {};
 
-    // DOM Element Selectors
     const fileInput = document.getElementById('fileInput');
     const welcomeView = document.getElementById('welcomeView');
     const loadingView = document.getElementById('loadingView');
@@ -175,10 +173,8 @@
     const themeToggle = document.getElementById('themeToggle');
     const themeIcon = document.getElementById('themeIcon');
 
-    // Initialize Lucide Icons
     lucide.createIcons();
 
-    // Theme Handler
     themeToggle.addEventListener('click', () => {
       document.documentElement.classList.toggle('dark');
       const isDark = document.documentElement.classList.contains('dark');
@@ -186,7 +182,6 @@
       lucide.createIcons();
     });
 
-    // Lazy initialization for SQL.js engine
     async function getSQLEngine() {
       if (!SQL) {
         SQL = await initSqlJs({
@@ -196,7 +191,6 @@
       return SQL;
     }
 
-    // Lazy loader for modern Zstandard decompression (APKG v3 / .APKG21b)
     async function decompressZstd(uint8Array) {
       if (!window.ZstdCodec) {
         await new Promise((resolve, reject) => {
@@ -216,22 +210,21 @@
       });
     }
 
-    // File Upload Handler
     fileInput.addEventListener('change', async (e) => {
       const file = e.target.files[0];
       if (!file) return;
 
       showView('loading');
-      updateStatus('Unpacking .apkg archive...');
+      updateStatus('Unpacking .apkg package...');
 
       try {
         const zip = await JSZip.loadAsync(file);
         
-        // Extract & Map Media Assets
+        // Extract Media Mapping
         mediaFiles = {};
-        const mediaFile = zip.file('media');
-        if (mediaFile) {
-          const mediaMapText = await mediaFile.async('text');
+        const mediaFileEntry = zip.file(/media$/i)[0];
+        if (mediaFileEntry) {
+          const mediaMapText = await mediaFileEntry.async('text');
           try {
             const mediaMap = JSON.parse(mediaMapText);
             for (const [key, filename] of Object.entries(mediaMap)) {
@@ -246,23 +239,32 @@
           }
         }
 
-        // Database Discovery (v3 .APKG21b -> .APKG21 -> legacy .APKG2)
-        updateStatus('Opening SQLite database...');
+        // Robust database search across zip entries
+        updateStatus('Opening collection database...');
         let dbBuffer = null;
 
-        if (zip.file('collection.APKG21b')) {
-          updateStatus('Decompressing modern APKG v3 database...');
-          const compressedData = await zip.file('collection.APKG21b').async('uint8array');
+        const anki21bEntry = zip.file(/collection\.anki21b$/i)[0];
+        const anki21Entry = zip.file(/collection\.anki21$/i)[0];
+        const anki2Entry = zip.file(/collection\.anki2$/i)[0];
+
+        if (anki21bEntry) {
+          updateStatus('Decompressing modern Anki v3 database...');
+          const compressedData = await anki21bEntry.async('uint8array');
           dbBuffer = await decompressZstd(compressedData);
-        } else if (zip.file('collection.APKG21')) {
-          dbBuffer = await zip.file('collection.APKG21').async('uint8array');
-        } else if (zip.file('collection.APKG2')) {
-          dbBuffer = await zip.file('collection.APKG2').async('uint8array');
+        } else if (anki21Entry) {
+          dbBuffer = await anki21Entry.async('uint8array');
+        } else if (anki2Entry) {
+          dbBuffer = await anki2Entry.async('uint8array');
         } else {
-          throw new Error('Valid APKG collection database not found in file.');
+          // Fallback: search for any sqlite file inside the zip
+          const anyDb = zip.file(/.*\.(anki2|anki21|sqlite|db)$/i)[0];
+          if (anyDb) {
+            dbBuffer = await anyDb.async('uint8array');
+          } else {
+            throw new Error('Valid APKG collection database not found in file.');
+          }
         }
 
-        // Parse Database Query via WebAssembly SQL
         const sqlEngine = await getSQLEngine();
         const db = new sqlEngine.Database(dbBuffer);
         
@@ -274,8 +276,7 @@
             const frontRaw = fields[0] || '';
             const backRaw = fields.length > 1 ? fields.slice(1).join('<br>') : fields[0];
 
-            // Filter out default dummy upgrade notice cards
-            if (!frontRaw.includes("Please update to the latest APKG version")) {
+            if (!frontRaw.includes("Please update to the latest Anki version")) {
               cards.push({
                 front: processCardText(frontRaw),
                 back: processCardText(backRaw)
@@ -298,14 +299,10 @@
       }
     });
 
-    // Content Processing Utility
     function processCardText(rawHtml) {
       if (!rawHtml) return '';
-      
-      // Parse Cloze deletions {{c1::Text::Hint}} -> <span class="cloze">[Text]</span>
       let processed = rawHtml.replace(/\{\{c\d+::(.*?)(?:::.*?)?\}\}/g, '<span class="cloze">[$1]</span>');
 
-      // Process and replace media image sources
       const parser = new DOMParser();
       const doc = parser.parseFromString(processed, 'text/html');
       const imgs = doc.querySelectorAll('img');
@@ -320,25 +317,20 @@
       return doc.body.innerHTML;
     }
 
-    // Render Active Card
     function showCard(index) {
       if (!cards[index]) return;
 
-      // Reset card flip
       isFlipped = false;
       cardInner.classList.remove('rotate-y-180');
 
-      // Populate text
       cardFront.innerHTML = cards[index].front;
       cardBack.innerHTML = cards[index].back;
 
-      // Update counters
       cardProgress.innerText = `Card ${index + 1} of ${cards.length}`;
       prevBtn.disabled = index === 0;
       nextBtn.disabled = index === cards.length - 1;
     }
 
-    // Interactive Controls & Events
     cardInner.addEventListener('click', () => {
       isFlipped = !isFlipped;
       cardInner.classList.toggle('rotate-y-180');
@@ -364,7 +356,6 @@
       showCard(currentIndex);
     });
 
-    // View Routing Helper
     function showView(viewName) {
       welcomeView.classList.add('hidden');
       loadingView.classList.add('hidden');
