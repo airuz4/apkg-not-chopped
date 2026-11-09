@@ -1,6 +1,6 @@
 // Application State
 let SQL = null;
-let sessionDecks = []; // Array of saved deck objects: { id, name, cards, mediaFiles }
+let sessionDecks = []; 
 let activeDeckId = null;
 
 let originalDeck = [];
@@ -105,7 +105,7 @@ async function decompressZstd(uint8Array) {
   });
 }
 
-// Upload & Parse .apkg Package
+// REPLACED FUNCTION HERE: Upload & Parse .apkg Package (Path & Regex Fix)
 async function handleFileUpload(file) {
   if (!file) return;
 
@@ -115,14 +115,15 @@ async function handleFileUpload(file) {
   try {
     const zip = await JSZip.loadAsync(file);
     
+    // Extract & Map Media Assets
     const localMediaFiles = {};
-    const mediaFileEntry = zip.file(/media$/i)[0];
-    if (mediaFileEntry) {
-      const mediaMapText = await mediaFileEntry.async('text');
+    const mediaEntryKey = Object.keys(zip.files).find(key => key.toLowerCase().endsWith('media'));
+    if (mediaEntryKey) {
+      const mediaMapText = await zip.files[mediaEntryKey].async('text');
       try {
         const mediaMap = JSON.parse(mediaMapText);
         for (const [key, filename] of Object.entries(mediaMap)) {
-          const fileData = zip.file(key);
+          const fileData = zip.files[key];
           if (fileData) {
             const blob = await fileData.async('blob');
             localMediaFiles[filename] = URL.createObjectURL(blob);
@@ -133,28 +134,28 @@ async function handleFileUpload(file) {
       }
     }
 
+    // Dynamic Database Finder across all zip entry keys
     updateStatus('Opening collection database...');
     let dbBuffer = null;
 
-    const anki21bEntry = zip.file(/collection\.anki21b$/i)[0];
-    const anki21Entry = zip.file(/collection\.anki21$/i)[0];
-    const anki2Entry = zip.file(/collection\.anki2$/i)[0];
+    const allKeys = Object.keys(zip.files);
+    const key21b = allKeys.find(k => k.toLowerCase().endsWith('collection.anki21b'));
+    const key21  = allKeys.find(k => k.toLowerCase().endsWith('collection.anki21'));
+    const key2   = allKeys.find(k => k.toLowerCase().endsWith('collection.anki2'));
+    const keyAny = allKeys.find(k => /\.(anki2|anki21|sqlite|db)$/i.test(k));
 
-    if (anki21bEntry) {
+    if (key21b) {
       updateStatus('Decompressing modern Anki v3 database...');
-      const compressedData = await anki21bEntry.async('uint8array');
+      const compressedData = await zip.files[key21b].async('uint8array');
       dbBuffer = await decompressZstd(compressedData);
-    } else if (anki21Entry) {
-      dbBuffer = await anki21Entry.async('uint8array');
-    } else if (anki2Entry) {
-      dbBuffer = await anki2Entry.async('uint8array');
+    } else if (key21) {
+      dbBuffer = await zip.files[key21].async('uint8array');
+    } else if (key2) {
+      dbBuffer = await zip.files[key2].async('uint8array');
+    } else if (keyAny) {
+      dbBuffer = await zip.files[keyAny].async('uint8array');
     } else {
-      const anyDb = zip.file(/.*\.(anki2|anki21|sqlite|db)$/i)[0];
-      if (anyDb) {
-        dbBuffer = await anyDb.async('uint8array');
-      } else {
-        throw new Error('Valid APKG collection database not found in file.');
-      }
+      throw new Error('Valid APKG collection database not found in file.');
     }
 
     const sqlEngine = await getSQLEngine();
@@ -182,7 +183,6 @@ async function handleFileUpload(file) {
       throw new Error('No valid flashcards found inside this deck.');
     }
 
-    // Save imported deck into session array
     const deckName = file.name.replace(/\.apkg$/i, '');
     const newDeck = {
       id: Date.now().toString(),
@@ -242,7 +242,6 @@ function renderDeckDrawer() {
     deckList.appendChild(item);
   });
 
-  // Attach delete buttons listeners
   document.querySelectorAll('.delete-deck-btn').forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
