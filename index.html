@@ -63,11 +63,12 @@
         <i data-lucide="moon" id="themeIcon" class="w-5 h-5"></i>
       </button>
 
-      <label for="fileInput" class="cursor-pointer inline-flex items-center gap-1.5 bg-brand-600 hover:bg-brand-700 text-white font-medium text-xs sm:text-sm px-3.5 py-2 rounded-xl shadow-sm transition active:scale-95">
+      <!-- Fixed iOS WebKit Native Input Button -->
+      <div class="relative overflow-hidden inline-flex items-center gap-1.5 bg-brand-600 hover:bg-brand-700 text-white font-medium text-xs sm:text-sm px-3.5 py-2 rounded-xl shadow-sm transition active:scale-95">
         <i data-lucide="upload" class="w-4 h-4"></i>
-        <span>Import .apkg</span>
-      </label>
-      <input type="file" id="fileInput" accept=".apkg,.zip" class="hidden" />
+        <span>Import Deck</span>
+        <input type="file" id="fileInputHeader" accept="*/*" class="absolute inset-0 opacity-0 w-full h-full cursor-pointer z-10" />
+      </div>
     </div>
   </header>
 
@@ -83,10 +84,13 @@
       <p class="text-slate-500 dark:text-slate-400 text-sm max-w-sm mb-6">
         Select an <code class="text-xs bg-slate-200 dark:bg-slate-800 px-1.5 py-0.5 rounded font-mono">.apkg</code> file to import your flashcard deck.
       </p>
-      <label for="fileInput" class="cursor-pointer bg-brand-600 hover:bg-brand-700 text-white font-semibold text-sm px-6 py-3 rounded-2xl shadow-md hover:shadow-lg transition active:scale-95 flex items-center gap-2">
+
+      <!-- Main Center iOS WebKit Native Input Button -->
+      <div class="relative overflow-hidden inline-flex items-center gap-2 bg-brand-600 hover:bg-brand-700 text-white font-semibold text-sm px-6 py-3 rounded-2xl shadow-md hover:shadow-lg transition active:scale-95">
         <i data-lucide="folder-open" class="w-5 h-5"></i>
         <span>Choose .apkg File</span>
-      </label>
+        <input type="file" id="fileInputCenter" accept="*/*" class="absolute inset-0 opacity-0 w-full h-full cursor-pointer z-10" />
+      </div>
     </div>
 
     <!-- Processing & Loading Overlay -->
@@ -113,9 +117,7 @@
           <!-- Front Face -->
           <div class="absolute inset-0 w-full h-full backface-hidden p-6 sm:p-8 flex flex-col justify-between overflow-y-auto">
             <div class="text-xs uppercase tracking-wider text-slate-400 font-bold mb-2">Question</div>
-            <div id="cardFront" class="anki-content flex-1 flex flex-col justify-center text-center text-lg sm:text-xl leading-relaxed text-slate-800 dark:text-slate-100">
-              <!-- Content injected dynamically -->
-            </div>
+            <div id="cardFront" class="anki-content flex-1 flex flex-col justify-center text-center text-lg sm:text-xl leading-relaxed text-slate-800 dark:text-slate-100"></div>
             <div class="text-center text-xs text-slate-400 font-medium pt-4 flex items-center justify-center gap-1">
               <i data-lucide="rotate-cw" class="w-3.5 h-3.5"></i> Tap card to reveal answer
             </div>
@@ -124,9 +126,7 @@
           <!-- Back Face -->
           <div class="absolute inset-0 w-full h-full backface-hidden rotate-y-180 p-6 sm:p-8 flex flex-col justify-between overflow-y-auto">
             <div class="text-xs uppercase tracking-wider font-bold text-brand-500 mb-2">Answer</div>
-            <div id="cardBack" class="anki-content flex-1 flex flex-col justify-center text-center text-lg sm:text-xl leading-relaxed text-slate-800 dark:text-slate-100">
-              <!-- Content injected dynamically -->
-            </div>
+            <div id="cardBack" class="anki-content flex-1 flex flex-col justify-center text-center text-lg sm:text-xl leading-relaxed text-slate-800 dark:text-slate-100"></div>
             <div class="text-center text-xs text-slate-400 font-medium pt-4">
               Tap card to view question
             </div>
@@ -156,7 +156,8 @@
     let isFlipped = false;
     let mediaFiles = {};
 
-    const fileInput = document.getElementById('fileInput');
+    const fileInputHeader = document.getElementById('fileInputHeader');
+    const fileInputCenter = document.getElementById('fileInputCenter');
     const welcomeView = document.getElementById('welcomeView');
     const loadingView = document.getElementById('loadingView');
     const studyView = document.getElementById('studyView');
@@ -210,8 +211,7 @@
       });
     }
 
-    fileInput.addEventListener('change', async (e) => {
-      const file = e.target.files[0];
+    async function handleFileUpload(file) {
       if (!file) return;
 
       showView('loading');
@@ -220,7 +220,6 @@
       try {
         const zip = await JSZip.loadAsync(file);
         
-        // Extract Media Mapping
         mediaFiles = {};
         const mediaFileEntry = zip.file(/media$/i)[0];
         if (mediaFileEntry) {
@@ -239,7 +238,6 @@
           }
         }
 
-        // Robust database search across zip entries
         updateStatus('Opening collection database...');
         let dbBuffer = null;
 
@@ -256,7 +254,6 @@
         } else if (anki2Entry) {
           dbBuffer = await anki2Entry.async('uint8array');
         } else {
-          // Fallback: search for any sqlite file inside the zip
           const anyDb = zip.file(/.*\.(anki2|anki21|sqlite|db)$/i)[0];
           if (anyDb) {
             dbBuffer = await anyDb.async('uint8array');
@@ -297,7 +294,10 @@
         alert(`Error loading deck: ${err.message}`);
         showView('welcome');
       }
-    });
+    }
+
+    fileInputHeader.addEventListener('change', (e) => handleFileUpload(e.target.files[0]));
+    fileInputCenter.addEventListener('change', (e) => handleFileUpload(e.target.files[0]));
 
     function processCardText(rawHtml) {
       if (!rawHtml) return '';
