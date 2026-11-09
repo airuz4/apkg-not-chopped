@@ -45,9 +45,12 @@
     /* Cloze Deletion Styling */
     .cloze { font-weight: 600; color: #0284c7; padding: 0 0.15rem; }
     .dark .cloze { color: #38bdf8; }
+
+    /* Touch & Drag Smoothness */
+    .card-swipe-transition { transition: transform 0.25s ease-out, opacity 0.25s ease-out; }
   </style>
 </head>
-<body class="h-full bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 transition-colors duration-200 flex flex-col font-sans select-none antialiased">
+<body class="h-full bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 transition-colors duration-200 flex flex-col font-sans select-none antialiased overflow-hidden">
 
   <!-- Top Navigation Header -->
   <header class="bg-white/80 dark:bg-slate-800/80 backdrop-blur border-b border-slate-200 dark:border-slate-700 px-4 py-3 flex items-center justify-between sticky top-0 z-20">
@@ -63,7 +66,7 @@
         <i data-lucide="moon" id="themeIcon" class="w-5 h-5"></i>
       </button>
 
-      <!-- Fixed iOS WebKit Native Input Button -->
+      <!-- iOS WebKit Native Input Button -->
       <div class="relative overflow-hidden inline-flex items-center gap-1.5 bg-brand-600 hover:bg-brand-700 text-white font-medium text-xs sm:text-sm px-3.5 py-2 rounded-xl shadow-sm transition active:scale-95">
         <i data-lucide="upload" class="w-4 h-4"></i>
         <span>Import Deck</span>
@@ -85,7 +88,6 @@
         Select an <code class="text-xs bg-slate-200 dark:bg-slate-800 px-1.5 py-0.5 rounded font-mono">.apkg</code> file to import your flashcard deck.
       </p>
 
-      <!-- Main Center iOS WebKit Native Input Button -->
       <div class="relative overflow-hidden inline-flex items-center gap-2 bg-brand-600 hover:bg-brand-700 text-white font-semibold text-sm px-6 py-3 rounded-2xl shadow-md hover:shadow-lg transition active:scale-95">
         <i data-lucide="folder-open" class="w-5 h-5"></i>
         <span>Choose .apkg File</span>
@@ -110,16 +112,25 @@
         </button>
       </div>
 
-      <!-- Card Container with 3D Flip Effect -->
-      <div class="flex-1 perspective-1000 my-auto min-h-[320px] max-h-[500px]">
-        <div id="cardInner" class="w-full h-full relative transform-style-3d transition-transform duration-500 cursor-pointer rounded-3xl shadow-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800">
+      <!-- Card Container with Swipe & 3D Flip Effect -->
+      <div class="flex-1 perspective-1000 my-auto min-h-[340px] max-h-[500px] relative touch-none">
+        
+        <div id="cardInner" class="w-full h-full relative transform-style-3d cursor-pointer rounded-3xl shadow-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800">
           
+          <!-- Swipe Overlay Feedback Badges -->
+          <div id="badgeRight" class="absolute top-6 left-6 z-30 opacity-0 pointer-events-none transition-opacity border-4 border-emerald-500 text-emerald-500 font-extrabold text-xl px-3 py-1 rounded-xl rotate-[-12deg] tracking-wider uppercase">
+            Learned
+          </div>
+          <div id="badgeLeft" class="absolute top-6 right-6 z-30 opacity-0 pointer-events-none transition-opacity border-4 border-rose-500 text-rose-500 font-extrabold text-xl px-3 py-1 rounded-xl rotate-[12deg] tracking-wider uppercase">
+            Again
+          </div>
+
           <!-- Front Face -->
           <div class="absolute inset-0 w-full h-full backface-hidden p-6 sm:p-8 flex flex-col justify-between overflow-y-auto">
             <div class="text-xs uppercase tracking-wider text-slate-400 font-bold mb-2">Question</div>
             <div id="cardFront" class="anki-content flex-1 flex flex-col justify-center text-center text-lg sm:text-xl leading-relaxed text-slate-800 dark:text-slate-100"></div>
             <div class="text-center text-xs text-slate-400 font-medium pt-4 flex items-center justify-center gap-1">
-              <i data-lucide="rotate-cw" class="w-3.5 h-3.5"></i> Tap card to reveal answer
+              <i data-lucide="rotate-cw" class="w-3.5 h-3.5"></i> Tap to flip • Swipe left/right
             </div>
           </div>
 
@@ -128,48 +139,92 @@
             <div class="text-xs uppercase tracking-wider font-bold text-brand-500 mb-2">Answer</div>
             <div id="cardBack" class="anki-content flex-1 flex flex-col justify-center text-center text-lg sm:text-xl leading-relaxed text-slate-800 dark:text-slate-100"></div>
             <div class="text-center text-xs text-slate-400 font-medium pt-4">
-              Tap card to view question
+              Swipe right if known • Swipe left to repeat
             </div>
           </div>
 
         </div>
       </div>
 
-      <!-- Action & Navigation Controls -->
+      <!-- Action & Swipe Buttons -->
       <div class="flex items-center justify-between gap-3 pt-2">
-        <button id="prevBtn" class="flex-1 py-3 px-4 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-semibold text-sm shadow-sm hover:bg-slate-100 dark:hover:bg-slate-700 active:scale-95 transition flex items-center justify-center gap-1.5 disabled:opacity-40">
-          <i data-lucide="chevron-left" class="w-4 h-4"></i> Previous
+        <button id="btnAgain" class="flex-1 py-3 px-4 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/50 text-rose-600 dark:text-rose-400 font-semibold text-sm shadow-sm hover:bg-rose-100 dark:hover:bg-rose-900/60 active:scale-95 transition flex items-center justify-center gap-1.5">
+          <i data-lucide="x" class="w-4 h-4"></i> Again (Left)
         </button>
-        <button id="nextBtn" class="flex-1 py-3 px-4 rounded-2xl bg-brand-600 text-white font-semibold text-sm shadow-md hover:bg-brand-700 active:scale-95 transition flex items-center justify-center gap-1.5 disabled:opacity-40">
-          Next <i data-lucide="chevron-right" class="w-4 h-4"></i>
+        <button id="btnGood" class="flex-1 py-3 px-4 rounded-2xl bg-emerald-600 text-white font-semibold text-sm shadow-md hover:bg-emerald-700 active:scale-95 transition flex items-center justify-center gap-1.5">
+          Learned (Right) <i data-lucide="check" class="w-4 h-4"></i>
         </button>
       </div>
 
+    </div>
+
+    <!-- Learning Complete View -->
+    <div id="completeView" class="hidden flex-1 flex flex-col items-center justify-center text-center px-4">
+      <div class="w-20 h-20 bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 rounded-3xl flex items-center justify-center mb-6 shadow-sm border border-emerald-200 dark:border-emerald-800">
+        <i data-lucide="trophy" class="w-10 h-10"></i>
+      </div>
+      <h2 class="text-2xl font-bold mb-1">Session Complete!</h2>
+      <p class="text-slate-500 dark:text-slate-400 text-sm max-w-sm mb-6">
+        You've reviewed all cards in this deck.
+      </p>
+
+      <!-- Results Breakdown Box -->
+      <div class="w-full max-w-xs bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-4 mb-6 shadow-sm">
+        <div class="flex justify-between items-center py-2 border-b border-slate-100 dark:border-slate-700/50">
+          <span class="text-xs font-semibold text-slate-500">Total Cards</span>
+          <span id="statTotal" class="font-bold text-sm">0</span>
+        </div>
+        <div class="flex justify-between items-center py-2 border-b border-slate-100 dark:border-slate-700/50">
+          <span class="text-xs font-semibold text-emerald-600 dark:text-emerald-400">Learned First Try</span>
+          <span id="statLearned" class="font-bold text-sm text-emerald-600 dark:text-emerald-400">0</span>
+        </div>
+        <div class="flex justify-between items-center py-2">
+          <span class="text-xs font-semibold text-rose-500">Repeated Cards</span>
+          <span id="statRepeated" class="font-bold text-sm text-rose-500">0</span>
+        </div>
+      </div>
+
+      <button id="restartBtn" class="bg-brand-600 hover:bg-brand-700 text-white font-semibold text-sm px-6 py-3 rounded-2xl shadow-md hover:shadow-lg transition active:scale-95 flex items-center gap-2">
+        <i data-lucide="rotate-ccw" class="w-4 h-4"></i> Study Deck Again
+      </button>
     </div>
 
   </main>
 
   <script>
     let SQL = null;
-    let cards = [];
-    let currentIndex = 0;
+    let originalDeck = [];
+    let queue = [];
+    let totalCardsCount = 0;
+    let learnedFirstTryCount = 0;
+    let repeatedCount = 0;
+
     let isFlipped = false;
     let mediaFiles = {};
+
+    // Touch & Swipe State Variables
+    let startX = 0, startY = 0, currentX = 0, currentY = 0;
+    let isDragging = false;
+    let isClickPrevented = false;
 
     const fileInputHeader = document.getElementById('fileInputHeader');
     const fileInputCenter = document.getElementById('fileInputCenter');
     const welcomeView = document.getElementById('welcomeView');
     const loadingView = document.getElementById('loadingView');
     const studyView = document.getElementById('studyView');
+    const completeView = document.getElementById('completeView');
     const loadingStatus = document.getElementById('loadingStatus');
 
     const cardInner = document.getElementById('cardInner');
     const cardFront = document.getElementById('cardFront');
     const cardBack = document.getElementById('cardBack');
     const cardProgress = document.getElementById('cardProgress');
+    const badgeRight = document.getElementById('badgeRight');
+    const badgeLeft = document.getElementById('badgeLeft');
 
-    const prevBtn = document.getElementById('prevBtn');
-    const nextBtn = document.getElementById('nextBtn');
+    const btnAgain = document.getElementById('btnAgain');
+    const btnGood = document.getElementById('btnGood');
+    const restartBtn = document.getElementById('restartBtn');
     const shuffleBtn = document.getElementById('shuffleBtn');
     const themeToggle = document.getElementById('themeToggle');
     const themeIcon = document.getElementById('themeIcon');
@@ -265,7 +320,7 @@
         const sqlEngine = await getSQLEngine();
         const db = new sqlEngine.Database(dbBuffer);
         
-        cards = [];
+        originalDeck = [];
         const res = db.exec("SELECT flds FROM notes");
         if (res.length > 0 && res[0].values) {
           res[0].values.forEach(row => {
@@ -274,20 +329,20 @@
             const backRaw = fields.length > 1 ? fields.slice(1).join('<br>') : fields[0];
 
             if (!frontRaw.includes("Please update to the latest Anki version")) {
-              cards.push({
+              originalDeck.push({
                 front: processCardText(frontRaw),
-                back: processCardText(backRaw)
+                back: processCardText(backRaw),
+                hasBeenReviewed: false
               });
             }
           });
         }
 
-        if (cards.length === 0) {
+        if (originalDeck.length === 0) {
           throw new Error('No valid flashcards found inside this deck.');
         }
 
-        currentIndex = 0;
-        showCard(currentIndex);
+        initDeckSession();
         showView('study');
 
       } catch (err) {
@@ -298,6 +353,14 @@
 
     fileInputHeader.addEventListener('change', (e) => handleFileUpload(e.target.files[0]));
     fileInputCenter.addEventListener('change', (e) => handleFileUpload(e.target.files[0]));
+
+    function initDeckSession() {
+      queue = originalDeck.map(c => ({ ...c }));
+      totalCardsCount = queue.length;
+      learnedFirstTryCount = 0;
+      repeatedCount = 0;
+      showCurrentCard();
+    }
 
     function processCardText(rawHtml) {
       if (!rawHtml) return '';
@@ -317,53 +380,158 @@
       return doc.body.innerHTML;
     }
 
-    function showCard(index) {
-      if (!cards[index]) return;
+    function showCurrentCard() {
+      if (queue.length === 0) {
+        showCompletionScreen();
+        return;
+      }
 
+      // Reset card flip and position
       isFlipped = false;
-      cardInner.classList.remove('rotate-y-180');
+      cardInner.classList.remove('rotate-y-180', 'card-swipe-transition');
+      cardInner.style.transform = 'none';
+      badgeRight.style.opacity = 0;
+      badgeLeft.style.opacity = 0;
 
-      cardFront.innerHTML = cards[index].front;
-      cardBack.innerHTML = cards[index].back;
+      const currentCard = queue[0];
+      cardFront.innerHTML = currentCard.front;
+      cardBack.innerHTML = currentCard.back;
 
-      cardProgress.innerText = `Card ${index + 1} of ${cards.length}`;
-      prevBtn.disabled = index === 0;
-      nextBtn.disabled = index === cards.length - 1;
+      cardProgress.innerText = `Remaining: ${queue.length} cards`;
     }
 
+    // Handle Swiping Logic
+    function handleAction(direction) {
+      if (queue.length === 0) return;
+      const card = queue.shift();
+
+      if (direction === 'right') {
+        if (!card.hasBeenReviewed) learnedFirstTryCount++;
+      } else {
+        card.hasBeenReviewed = true;
+        repeatedCount++;
+        queue.push(card); // Re-queue card to end of deck
+      }
+
+      showCurrentCard();
+    }
+
+    // Touch & Drag Gesture Listeners
+    function onTouchStart(e) {
+      if (queue.length === 0) return;
+      isDragging = true;
+      isClickPrevented = false;
+      const touch = e.touches ? e.touches[0] : e;
+      startX = touch.clientX;
+      startY = touch.clientY;
+      cardInner.classList.remove('card-swipe-transition');
+    }
+
+    function onTouchMove(e) {
+      if (!isDragging) return;
+      const touch = e.touches ? e.touches[0] : e;
+      currentX = touch.clientX - startX;
+      currentY = touch.clientY - startY;
+
+      if (Math.abs(currentX) > 10) isClickPrevented = true;
+
+      const rotateDeg = currentX * 0.08;
+      const flipRotation = isFlipped ? 'rotateY(180deg)' : '';
+      cardInner.style.transform = `translate3d(${currentX}px, ${currentY}px, 0) rotate(${rotateDeg}deg) ${flipRotation}`;
+
+      // Badge Opacity Control
+      const opacity = Math.min(Math.abs(currentX) / 100, 1);
+      if (currentX > 0) {
+        badgeRight.style.opacity = opacity;
+        badgeLeft.style.opacity = 0;
+      } else {
+        badgeLeft.style.opacity = opacity;
+        badgeRight.style.opacity = 0;
+      }
+    }
+
+    function onTouchEnd() {
+      if (!isDragging) return;
+      isDragging = false;
+      cardInner.classList.add('card-swipe-transition');
+
+      const threshold = 110;
+      if (currentX > threshold) {
+        // Swipe Right -> Learned
+        cardInner.style.transform = `translate3d(1000px, ${currentY}px, 0) rotate(45deg)`;
+        setTimeout(() => handleAction('right'), 200);
+      } else if (currentX < -threshold) {
+        // Swipe Left -> Repeat
+        cardInner.style.transform = `translate3d(-1000px, ${currentY}px, 0) rotate(-45deg)`;
+        setTimeout(() => handleAction('left'), 200);
+      } else {
+        // Snap back to center
+        const flipRotation = isFlipped ? 'rotateY(180deg)' : '';
+        cardInner.style.transform = flipRotation ? flipRotation : 'none';
+        badgeRight.style.opacity = 0;
+        badgeLeft.style.opacity = 0;
+      }
+
+      currentX = 0;
+      currentY = 0;
+    }
+
+    // Attach Swipe Events
+    cardInner.addEventListener('touchstart', onTouchStart, { passive: true });
+    cardInner.addEventListener('touchmove', onTouchMove, { passive: true });
+    cardInner.addEventListener('touchend', onTouchEnd);
+
+    cardInner.addEventListener('mousedown', onTouchStart);
+    window.addEventListener('mousemove', onTouchMove);
+    window.addEventListener('mouseup', onTouchEnd);
+
+    // Card Flip Click Event
     cardInner.addEventListener('click', () => {
+      if (isClickPrevented) return;
       isFlipped = !isFlipped;
       cardInner.classList.toggle('rotate-y-180');
     });
 
-    prevBtn.addEventListener('click', () => {
-      if (currentIndex > 0) {
-        currentIndex--;
-        showCard(currentIndex);
-      }
+    // Button Actions
+    btnAgain.addEventListener('click', () => {
+      cardInner.classList.add('card-swipe-transition');
+      cardInner.style.transform = 'translate3d(-1000px, 0, 0) rotate(-30deg)';
+      setTimeout(() => handleAction('left'), 200);
     });
 
-    nextBtn.addEventListener('click', () => {
-      if (currentIndex < cards.length - 1) {
-        currentIndex++;
-        showCard(currentIndex);
-      }
+    btnGood.addEventListener('click', () => {
+      cardInner.classList.add('card-swipe-transition');
+      cardInner.style.transform = 'translate3d(1000px, 0, 0) rotate(30deg)';
+      setTimeout(() => handleAction('right'), 200);
     });
 
     shuffleBtn.addEventListener('click', () => {
-      cards.sort(() => Math.random() - 0.5);
-      currentIndex = 0;
-      showCard(currentIndex);
+      queue.sort(() => Math.random() - 0.5);
+      showCurrentCard();
     });
+
+    restartBtn.addEventListener('click', () => {
+      initDeckSession();
+      showView('study');
+    });
+
+    function showCompletionScreen() {
+      document.getElementById('statTotal').innerText = totalCardsCount;
+      document.getElementById('statLearned').innerText = learnedFirstTryCount;
+      document.getElementById('statRepeated').innerText = repeatedCount;
+      showView('complete');
+    }
 
     function showView(viewName) {
       welcomeView.classList.add('hidden');
       loadingView.classList.add('hidden');
       studyView.classList.add('hidden');
+      completeView.classList.add('hidden');
 
       if (viewName === 'welcome') welcomeView.classList.remove('hidden');
       if (viewName === 'loading') loadingView.classList.remove('hidden');
       if (viewName === 'study') studyView.classList.remove('hidden');
+      if (viewName === 'complete') completeView.classList.remove('hidden');
     }
 
     function updateStatus(text) {
