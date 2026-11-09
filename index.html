@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Anki Web Reader</title>
+  <title>APKG Web Reader</title>
   
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -35,12 +35,12 @@
     .backface-hidden { backface-visibility: hidden; -webkit-backface-visibility: hidden; }
     .rotate-y-180 { transform: rotateY(180deg); }
     
-    /* Anki HTML styling support */
-    .anki-content img { max-width: 100%; height: auto; margin: 0.5rem auto; display: block; border-radius: 0.375rem; }
-    .anki-content ul { list-style-type: disc; padding-left: 1.25rem; }
-    .anki-content ol { list-style-type: decimal; padding-left: 1.25rem; }
-    .anki-content code { background-color: rgba(0,0,0,0.05); padding: 0.1rem 0.3rem; border-radius: 0.25rem; font-size: 0.9em; }
-    .dark .anki-content code { background-color: rgba(255,255,255,0.1); }
+    /* APKG HTML styling support */
+    .APKG-content img { max-width: 100%; height: auto; margin: 0.5rem auto; display: block; border-radius: 0.375rem; }
+    .APKG-content ul { list-style-type: disc; padding-left: 1.25rem; }
+    .APKG-content ol { list-style-type: decimal; padding-left: 1.25rem; }
+    .APKG-content code { background-color: rgba(0,0,0,0.05); padding: 0.1rem 0.3rem; border-radius: 0.25rem; font-size: 0.9em; }
+    .dark .APKG-content code { background-color: rgba(255,255,255,0.1); }
     
     /* Cloze Deletion Styling */
     .cloze { font-weight: 600; color: #0284c7; padding: 0 0.15rem; }
@@ -58,7 +58,7 @@
       <div class="p-1.5 bg-brand-500 text-white rounded-lg shadow-sm">
         <i data-lucide="layers" class="w-5 h-5"></i>
       </div>
-      <h1 class="font-bold text-lg tracking-tight bg-gradient-to-r from-slate-900 to-slate-700 dark:from-white dark:to-slate-300 bg-clip-text text-transparent">Anki Reader</h1>
+      <h1 class="font-bold text-lg tracking-tight bg-gradient-to-r from-slate-900 to-slate-700 dark:from-white dark:to-slate-300 bg-clip-text text-transparent">APKG Reader</h1>
     </div>
     
     <div class="flex items-center gap-2">
@@ -128,7 +128,7 @@
           <!-- Front Face -->
           <div class="absolute inset-0 w-full h-full backface-hidden p-6 sm:p-8 flex flex-col justify-between overflow-y-auto">
             <div class="text-xs uppercase tracking-wider text-slate-400 font-bold mb-2">Question</div>
-            <div id="cardFront" class="anki-content flex-1 flex flex-col justify-center text-center text-lg sm:text-xl leading-relaxed text-slate-800 dark:text-slate-100"></div>
+            <div id="cardFront" class="APKG-content flex-1 flex flex-col justify-center text-center text-lg sm:text-xl leading-relaxed text-slate-800 dark:text-slate-100"></div>
             <div class="text-center text-xs text-slate-400 font-medium pt-4 flex items-center justify-center gap-1">
               <i data-lucide="rotate-cw" class="w-3.5 h-3.5"></i> Tap to flip • Swipe left/right
             </div>
@@ -137,7 +137,7 @@
           <!-- Back Face -->
           <div class="absolute inset-0 w-full h-full backface-hidden rotate-y-180 p-6 sm:p-8 flex flex-col justify-between overflow-y-auto">
             <div class="text-xs uppercase tracking-wider font-bold text-brand-500 mb-2">Answer</div>
-            <div id="cardBack" class="anki-content flex-1 flex flex-col justify-center text-center text-lg sm:text-xl leading-relaxed text-slate-800 dark:text-slate-100"></div>
+            <div id="cardBack" class="APKG-content flex-1 flex flex-col justify-center text-center text-lg sm:text-xl leading-relaxed text-slate-800 dark:text-slate-100"></div>
             <div class="text-center text-xs text-slate-400 font-medium pt-4">
               Swipe right if known • Swipe left to repeat
             </div>
@@ -296,20 +296,20 @@
         updateStatus('Opening collection database...');
         let dbBuffer = null;
 
-        const anki21bEntry = zip.file(/collection\.anki21b$/i)[0];
-        const anki21Entry = zip.file(/collection\.anki21$/i)[0];
-        const anki2Entry = zip.file(/collection\.anki2$/i)[0];
+        const APKG21bEntry = zip.file(/collection\.APKG21b$/i)[0];
+        const APKG21Entry = zip.file(/collection\.APKG21$/i)[0];
+        const APKG2Entry = zip.file(/collection\.APKG2$/i)[0];
 
-        if (anki21bEntry) {
-          updateStatus('Decompressing modern Anki v3 database...');
-          const compressedData = await anki21bEntry.async('uint8array');
+        if (APKG21bEntry) {
+          updateStatus('Decompressing modern APKG v3 database...');
+          const compressedData = await APKG21bEntry.async('uint8array');
           dbBuffer = await decompressZstd(compressedData);
-        } else if (anki21Entry) {
-          dbBuffer = await anki21Entry.async('uint8array');
-        } else if (anki2Entry) {
-          dbBuffer = await anki2Entry.async('uint8array');
+        } else if (APKG21Entry) {
+          dbBuffer = await APKG21Entry.async('uint8array');
+        } else if (APKG2Entry) {
+          dbBuffer = await APKG2Entry.async('uint8array');
         } else {
-          const anyDb = zip.file(/.*\.(anki2|anki21|sqlite|db)$/i)[0];
+          const anyDb = zip.file(/.*\.(APKG2|APKG21|sqlite|db)$/i)[0];
           if (anyDb) {
             dbBuffer = await anyDb.async('uint8array');
           } else {
@@ -328,7 +328,7 @@
             const frontRaw = fields[0] || '';
             const backRaw = fields.length > 1 ? fields.slice(1).join('<br>') : fields[0];
 
-            if (!frontRaw.includes("Please update to the latest Anki version")) {
+            if (!frontRaw.includes("Please update to the latest APKG version")) {
               originalDeck.push({
                 front: processCardText(frontRaw),
                 back: processCardText(backRaw),
