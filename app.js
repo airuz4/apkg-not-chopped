@@ -1,4 +1,4 @@
-// Application State
+// Application State & Storage Keys
 let SQL = null;
 let sessionDecks = []; 
 let activeDeckId = null;
@@ -105,7 +105,7 @@ async function decompressZstd(uint8Array) {
   });
 }
 
-// REPLACED FUNCTION HERE: Upload & Parse .apkg Package (Path & Regex Fix)
+// Upload & Append Multiple Decks
 async function handleFileUpload(file) {
   if (!file) return;
 
@@ -185,18 +185,26 @@ async function handleFileUpload(file) {
 
     const deckName = file.name.replace(/\.apkg$/i, '');
     const newDeck = {
-      id: Date.now().toString(),
+      id: Date.now().toString() + '_' + Math.random().toString(36).substr(2, 4),
       name: deckName,
       cards: parsedCards,
       mediaFiles: localMediaFiles
     };
 
+    // Push new deck without erasing previous ones
     sessionDecks.push(newDeck);
+    
+    // Reset file input targets so uploading the same file triggers change listener
+    fileInputHeader.value = '';
+    fileInputCenter.value = '';
+
     renderDeckDrawer();
     selectDeck(newDeck.id);
 
   } catch (err) {
     alert(`Error loading deck: ${err.message}`);
+    fileInputHeader.value = '';
+    fileInputCenter.value = '';
     if (sessionDecks.length === 0) showView('welcome');
     else showView('study');
   }
@@ -383,7 +391,7 @@ function onTouchEnd() {
     cardInner.style.transform = `translate3d(1000px, ${currentY}px, 0) rotate(45deg)`;
     setTimeout(() => handleAction('right'), 200);
   } else if (currentX < -threshold) {
-    cardInner.style.transform = `translate3d(-1000px, ${currentY}px, 0) rotate(-45deg)`;
+    cardInner.style.transform = `translate3d(-1000px, 0, 0) rotate(-45deg)`;
     setTimeout(() => handleAction('left'), 200);
   } else {
     const flipRotation = isFlipped ? 'rotateY(180deg)' : '';
